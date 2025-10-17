@@ -1,5 +1,15 @@
-docker-compose: docker-compose up
+.PHONY: docker-compose
+docker-compose:
+	docker-compose up
 
-run: uv run --env-file .env python app/main.py
+.PHONY: run
+run:
+	uv run --env-file .env python cmd_server/server/main.py
 
-import-path: $env:PYTHONPATH = "$PWD"
+.PHONY: run-worker
+run-worker:
+	uv run --env-file .env cmd_server/worker/main.py
+
+.PHONY: import-path
+import-path:
+	$env:PYTHONPATH = "$PWD"

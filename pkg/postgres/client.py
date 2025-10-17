@@ -2,7 +2,6 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
-    AsyncEngine,
     create_async_engine,
     async_sessionmaker,
 )
@@ -31,7 +30,7 @@ class PostgresClient:
             f"postgresql+asyncpg://{user}:{password}@{host}:{port}/{database}"
         )
 
-        self._engine: Optional[AsyncEngine] = None
+        self._engine = None
         self._session_factory: Optional[async_sessionmaker] = None
         self.pool_size = pool_size
 
@@ -67,6 +66,7 @@ class PostgresClient:
 
             logger.info("PostgreSQL connection established successfully")
 
+
         except Exception as e:
             logger.error(f"Failed to connect to PostgreSQL: {e}")
             raise
@@ -99,17 +99,6 @@ class PostgresClient:
 
     @asynccontextmanager
     async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
-        """
-        Get a database session with automatic commit/rollback.
-
-        Usage:
-            async with client.get_session() as session:
-                result = await session.execute(query)
-                await session.commit()
-
-        Yields:
-            AsyncSession: SQLAlchemy async session
-        """
         if self._session_factory is None:
             raise RuntimeError("PostgreSQL client not connected. Call connect() first.")
 
@@ -125,11 +114,7 @@ class PostgresClient:
             await session.close()
 
     async def create_tables(self) -> None:
-        """
-        Create all tables defined in Base metadata.
 
-        Note: Use Alembic migrations in production.
-        """
         if self._engine is None:
             raise RuntimeError("PostgreSQL client not connected")
 
@@ -141,30 +126,9 @@ class PostgresClient:
             logger.error(f"Failed to create tables: {e}")
             raise
 
-    async def drop_tables(self) -> None:
-        """
-        Drop all tables defined in Base metadata.
-
-        WARNING: This will delete all data!
-        """
-        if self._engine is None:
-            raise RuntimeError("PostgreSQL client not connected")
-
-        try:
-            async with self._engine.begin() as conn:
-                await conn.run_sync(Base.metadata.drop_all)
-            logger.warning("Database tables dropped")
-        except Exception as e:
-            logger.error(f"Failed to drop tables: {e}")
-            raise
 
     async def health_check(self) -> bool:
-        """
-        Check if database connection is healthy.
 
-        Returns:
-            bool: True if connection is healthy, False otherwise
-        """
         if self._engine is None:
             return False
 
@@ -188,7 +152,7 @@ class PostgresClient:
             await session.execute(text(query), params or {})
 
     @property
-    def engine(self) -> AsyncEngine:
+    def engine(self):
         """Get the SQLAlchemy engine."""
         if self._engine is None:
             raise RuntimeError("PostgreSQL client not connected")
@@ -202,54 +166,3 @@ class PostgresClient:
         return self._session_factory
 
 
-# Singleton instance (optional, can be initialized in main app)
-_postgres_client: Optional[PostgresClient] = None
-
-
-def get_postgres_client() -> PostgresClient:
-    """
-    Get the singleton PostgreSQL client instance.
-
-    Returns:
-        PostgresClient: The initialized client
-
-    Raises:
-        RuntimeError: If client not initialized
-    """
-    if _postgres_client is None:
-        raise RuntimeError("PostgreSQL client not initialized")
-    return _postgres_client
-
-
-def init_postgres_client(
-        user: str,
-        password: str,
-        host: str,
-        port: int,
-        database: str,
-        **kwargs,
-) -> PostgresClient:
-    """
-    Initialize the singleton PostgreSQL client.
-
-    Args:
-        user: Database username
-        password: Database password
-        host: Database host
-        port: Database port
-        database: Database name
-        **kwargs: Additional engine configuration
-
-    Returns:
-        PostgresClient: The initialized client
-    """
-    global _postgres_client
-    _postgres_client = PostgresClient(
-        user=user,
-        password=password,
-        host=host,
-        port=port,
-        database=database,
-        **kwargs,
-    )
-    return _postgres_client

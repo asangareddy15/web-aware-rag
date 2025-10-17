@@ -23,7 +23,7 @@ from app.repository.models.tables import (
     UrlStatusEnum,
 )
 from pkg.postgres.client import PostgresClient
-from pkg.redis import RedisQueue
+from pkg.redis.client import RedisQueue
 
 
 def _to_url_entity(model: UrlModel) -> UrlEntity:

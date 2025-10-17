@@ -6,8 +6,11 @@ class Settings(BaseSettings):
     # Application Settings
     app_name: str = "Web-Aware RAG Engine"
 
-    # Gemini API Configuration
-    gemini_api_key: str = Field(..., description="Gemini API key for LLM and embeddings")
+    # Legacy Gemini configuration (optional)
+    gemini_api_key: str | None = Field(None, description="Gemini API key (legacy, optional)")
+
+    # Voyage API Configuration
+    voyage_api_key: str = Field(..., validation_alias="VOYAGE_API_KEY", description="VoyageAI API key for contextualized embeddings")
 
     # PostgreSQL Configuration
     postgres_db_user: str = Field(..., description="PostgreSQL username")
@@ -19,10 +22,12 @@ class Settings(BaseSettings):
     # Redis Configuration
     redis_host: str = Field(..., description="Redis host")
     redis_port: int = Field(..., description="Redis port")
+    redis_db: int = Field(0, description="Redis database index for queues")
+    redis_queue_name: str = Field("url_ingestion", description="Redis list name used for ingestion jobs")
 
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
-        extra="ignore"
+        extra="ignore",
     )
