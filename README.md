@@ -422,5 +422,9 @@ Docker (Postgres/Redis)
   - Redis 7‑alpine exposed on `6379`.
 - Default Postgres credentials in compose are placeholders; override with your `.env` when running the app.
 
+[View Demo Video on Google Drive](https://drive.google.com/file/d/1R8JGg1Q5i6IOB2XR6F8syU4HhcgZA0Op/view?usp=drive_link)
+
+
+
 
 
